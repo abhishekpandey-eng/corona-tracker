@@ -1,6 +1,8 @@
 package com.coronatracker.utilities;
 
 import java.lang.reflect.Type;
+import java.util.Optional;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,15 +28,15 @@ public class HttpClient {
 	
 	private RestTemplate restTemplate = new RestTemplate(getClientHttpRequestFactory());
 
-	public <T, V> ResponseEntity<T> executeRequest(String url, Type type, HttpMethod httpMethod, HttpEntity<V> body,
+	public <T, V> Optional<T> executeRequest(String url, Type type, HttpMethod httpMethod, HttpEntity<V> body,
 			String... queryParams) {
 		try {
 			ResponseEntity<T> response = restTemplate.exchange(url, httpMethod, body,
 					ParameterizedTypeReference.forType(type));
-			return response;
+			return Optional.of(response.getBody());
 		} catch (Exception exception) {
-			logger.error("HttpClient: exception while fetching response for url "+url+" message: "+  exception.getMessage());
-			throw exception;
+			logger.error("HttpClient: exception while fetching response for url: {} message: {}", url, exception.getMessage());
+			return Optional.empty();
 		}
 	}
 

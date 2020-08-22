@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
-import javax.annotation.PostConstruct;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.logging.log4j.LogManager;
@@ -27,6 +26,9 @@ public class CoronaTrackerServiceImpl implements ICoronaTrackerService {
 	@Value("${spring.ct.providerUrl}")
 	private String providerUrl;
 
+	@Value("${spring.ct.covid19Country}")
+	private String covid19Country;
+
 	@Autowired
 	private HttpClient httpClient;
 
@@ -34,8 +36,10 @@ public class CoronaTrackerServiceImpl implements ICoronaTrackerService {
 
 	private Logger logger = LogManager.getLogger(getClass());
 
+	/**
+	 * fetch stats of covid19 from given provider (Github) and transforming as per our need.
+	 */
 	@Override
-	@PostConstruct
 	public void fetchCoronaStats() throws IOException {
 		Optional<String> trackerResponse = httpClient.executeRequest(providerUrl, String.class, HttpMethod.GET, null);
 		if (!trackerResponse.isPresent()) {
@@ -46,7 +50,7 @@ public class CoronaTrackerServiceImpl implements ICoronaTrackerService {
 		StringReader trackerResponseCsv = new StringReader(trackerResponse.get());
 		Iterable<CSVRecord> stats = CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(trackerResponseCsv);
 		List<CoronaStats> newStats = StreamSupport.stream(stats.spliterator(), false)
-				.filter(csvRecord -> csvRecord.get("Country/Region").equals("Canada"))
+				.filter(csvRecord -> csvRecord.get("Country/Region").equals(covid19Country))
 				.map(csvRecord -> getCoronaStats(csvRecord)).collect(Collectors.toList());
 
 		if (CollectionUtils.isEmpty(newStats)) {
@@ -54,6 +58,11 @@ public class CoronaTrackerServiceImpl implements ICoronaTrackerService {
 			return;
 		}
 
+		/**
+		 * Note: we can set this response in cache like Redis (in case of distributed
+		 * env) and will use lock techniques like "Shed lock" so that scheduler of one
+		 * Application instance will run at a time.
+		 */
 		this.allStats = newStats;
 		logger.info("new tracker response set at: {}", LocalDateTime.now());
 	}
@@ -61,6 +70,11 @@ public class CoronaTrackerServiceImpl implements ICoronaTrackerService {
 	@Override
 	public List<CoronaStats> getAllCoronaStats() {
 		return allStats;
+	}
+
+	@Override
+	public String getCovid19Country() {
+		return covid19Country;
 	}
 
 	/**

@@ -3,6 +3,7 @@ package com.coronatracker.schedulers;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
+import javax.annotation.PostConstruct;
 import javax.jms.Queue;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -30,7 +31,16 @@ public class StatsScheduler {
 
 	private Logger logger = LogManager.getLogger(getClass());
 
-	@Scheduled(fixedDelay = 10 * 60 * 1000)
+	/**
+	 * Run for every 6 hours, using PostConstruct here to run this scheduler
+	 * during startup
+	 * 
+	 * Note: we can set this response in cache like Redis (in case of distributed
+	 * env) and will use lock techniques like "Shed lock" so that scheduler of one
+	 * Application instance will run at a time.
+	 */
+	@Scheduled(cron = "0 0 */6 * * *")
+	@PostConstruct
 	private void processCoronaStats() {
 		logger.info("Corona Stats cron start processing at : " + LocalDateTime.now());
 		fetchCoronaStats();

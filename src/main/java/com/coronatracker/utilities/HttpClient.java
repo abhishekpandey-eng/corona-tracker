@@ -28,8 +28,7 @@ public class HttpClient {
 	
 	private RestTemplate restTemplate = new RestTemplate(getClientHttpRequestFactory());
 
-	public <T, V> Optional<T> executeRequest(String url, Type type, HttpMethod httpMethod, HttpEntity<V> body,
-			String... queryParams) {
+	public <T, V> Optional<T> executeRequest(String url, Type type, HttpMethod httpMethod, HttpEntity<V> body) {
 		try {
 			ResponseEntity<T> response = restTemplate.exchange(url, httpMethod, body,
 					ParameterizedTypeReference.forType(type));

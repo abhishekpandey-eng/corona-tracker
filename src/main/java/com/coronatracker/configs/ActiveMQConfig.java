@@ -1,6 +1,7 @@
 package com.coronatracker.configs;
 
 import org.apache.activemq.command.ActiveMQQueue;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jms.annotation.EnableJms;
@@ -10,10 +11,11 @@ import javax.jms.Queue;
 @EnableJms
 public class ActiveMQConfig {
 	
-	public static final String STATS_QUEUE = "stats.queue";
+	@Value("${spring.ct.queue.name}")
+	private String statsQueue;
 
 	@Bean
 	public Queue statsJMSQueue() {
-		return new ActiveMQQueue(STATS_QUEUE);
+		return new ActiveMQQueue(statsQueue);
 	}
 }

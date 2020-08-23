@@ -7,7 +7,9 @@ spring:
     httpClient:
       connectionTimeout: 2000
       readTimout: 2000
-    covid19Country: Canada  
+    covid19Country: Canada
+    queue:
+      name: stats.queue  
   activemq:
     in-memory: true
     pool:
